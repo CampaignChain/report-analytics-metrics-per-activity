@@ -1,0 +1,285 @@
+<?php
+/*
+ * This file is part of the CampaignChain package.
+ *
+ * (c) Sandro Groganz <sandro@campaignchain.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace CampaignChain\Report\Analytics\MetricsPerActivityBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use CampaignChain\CoreBundle\Entity\Campaign;
+use Symfony\Component\HttpFoundation\Request;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+
+class PageController extends Controller
+{
+    public function indexAction(Request $request){
+        $campaign = array();
+        $form = $this->createFormBuilder($campaign)
+            ->setMethod('GET')
+            ->add('campaign', 'entity', array(
+                'label' => 'Campaign',
+                'class' => 'CampaignChainCoreBundle:Campaign',
+                // Only display campaigns for selection that actually have report data
+                'query_builder' => function(EntityRepository $er) {
+                        return $er->createQueryBuilder('campaign')
+                            ->select('c')
+                            ->from('CampaignChain\CoreBundle\Entity\Campaign', 'c')
+                            ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
+                            ->where('r.campaign = c.id')
+                            ->orderBy('campaign.startDate', 'ASC');
+                    },
+                'property' => 'name',
+                'empty_value' => 'Select a Campaign',
+                'empty_data' => null,
+            ))
+            ->add('save', 'submit', array(
+                'label' => 'Show Report'
+            ))
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        $tplVars = array(
+            'page_title' => 'Metrics Per Activity',
+            'form' => $form->createView(),
+        );
+
+        if ($form->isValid()) {
+            $campaign = $form->getData()['campaign'];
+            $dataService = $this->get('campaignchain.report.analytics.metrics_per_activity.data');
+            $tplVars['report_data'] = $dataService->getCampaignSeries($campaign);
+            $tplVars['campaign_data'] = $dataService->getCampaignData($campaign);
+            $tplVars['milestone_data'] = $dataService->getMilestonesData($campaign);
+            $tplVars['markings_data'] = $dataService->getMilestonesMarkings($campaign);
+        }
+
+        return $this->render(
+            'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:index.html.twig',
+            $tplVars);
+    }
+
+    public function activityAction(Request $request, $id){
+        // TODO: If an activity is done, it cannot be edited.
+        $activity = $this->getDoctrine()
+            ->getRepository('CampaignChainCoreBundle:Activity')
+            ->find($id);
+
+        if (!$activity) {
+            throw new \Exception(
+                'No activity found for id '.$id
+            );
+        }
+
+        $campaign = $activity->getCampaign();
+
+        $dataService = $this->get('campaignchain.report.analytics.metrics_per_activity.data');
+
+        return $this->render(
+            'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:activity.html.twig',
+            array(
+                'page_title' => 'Metrics Per Activity',
+                'report_data' => $dataService->getActivitySeries($activity),
+                'campaign_data' => $dataService->getCampaignData($campaign),
+                'milestone_data' => $dataService->getMilestonesData($campaign),
+                'markings_data' => $dataService->getMilestonesMarkings($campaign),
+            ));
+    }
+
+    public function activitiesAction(Request $request){
+
+        $dataReport = null;
+        $dataCampaign = null;
+        $dataMilestone = '';
+        $dataMarkings = '';
+
+        $campaign = array();
+        $form = $this->createFormBuilder($campaign)
+            ->setMethod('GET')
+            ->add('campaign', 'entity', array(
+                'label' => 'Campaign',
+                'class' => 'CampaignChainCoreBundle:Campaign',
+                // Only display campaigns for selection that actually have report data
+                'query_builder' => function(EntityRepository $er) {
+                        return $er->createQueryBuilder('campaign')
+                            ->select('c')
+                            ->from('CampaignChain\CoreBundle\Entity\Campaign', 'c')
+                            ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
+                            ->where('r.campaign = c.id')
+                            ->orderBy('campaign.startDate', 'ASC');
+                    },
+                'property' => 'name',
+                'empty_value' => 'Select a Campaign',
+                'empty_data' => null,
+            ))
+            ->add('save', 'submit', array(
+                'label' => 'Show Report'
+            ))
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isValid()) {
+            $campaign = $form->getData()['campaign'];
+
+            $dataService = $this->get('campaignchain.report.analytics.metrics_per_activity.data');
+
+
+//            $campaignId = $campaign->getId();
+//
+//            // Find all activities of this campaign that do have report data
+//            $em = $this->getDoctrine()->getManager();
+//            $qb = $em->createQueryBuilder();
+//            $qb->select('r')
+//                ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
+//                ->from('CampaignChain\CoreBundle\Entity\Activity', 'a')
+//                ->where('r.campaign = :campaignId')
+//                ->groupBy('r.activity')
+//                ->orderBy('a.due', 'ASC')
+//                ->setParameter('campaignId', $campaignId);
+//            $query = $qb->getQuery();
+//            $reportActivities = $query->getResult();
+//
+//            // Get campaign duration in days
+//            $campaignStartDate = $reportActivities[0]->getCampaign()->getStartDate();
+//            $campaignEndDate = $reportActivities[0]->getCampaign()->getEndDate();
+//            $dataCampaign['duration'] = $campaignStartDate->diff($campaignEndDate)->format('%a');
+//
+//            // We'll need the serializer later
+//            $encoders = array(new JsonEncoder());
+//            $normalizers = array(new GetSetMethodNormalizer());
+//            $serializer = new Serializer($normalizers, $encoders);
+//
+//            // Get the report data per activity
+//            foreach($reportActivities as $reportActivity){
+//                $qb = $em->createQueryBuilder();
+//                $qb->select('r')
+//                    ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
+//                    ->where('r.activity = :activityId')
+//                    ->andWhere('r.campaign = :campaignId')
+//                    ->groupBy('r.metric')
+//                    ->setParameter('activityId', $reportActivity->getActivity()->getId())
+//                    ->setParameter('campaignId', $campaignId);
+//                $query = $qb->getQuery();
+//                $reportDimensions = $query->getResult();
+//
+//                // Get the report data per dimension
+//                foreach($reportDimensions as $reportDimension){
+//                    $qb = $em->createQueryBuilder();
+//                    $qb->select('r')
+//                        ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
+//                        ->where('r.activity = :activityId')
+//                        ->andWhere('r.campaign = :campaignId')
+//                        ->andWhere('r.metric = :metricId')
+//                        ->orderBy('r.time', 'ASC')
+//                        ->setParameter('activityId', $reportActivity->getActivity()->getId())
+//                        ->setParameter('campaignId', $campaignId)
+//                        ->setParameter('metricId', $reportDimension->getMetric()->getId());
+//                    $query = $qb->getQuery();
+//                    $reportEntries = $query->getResult();
+//
+//                    $dataEntry = array();
+//
+//                    foreach($reportEntries as $reportEntry){
+//                        // Collecting the data series
+//                        $dataEntry[] = array($reportEntry->getJavascriptTimestamp(), $reportEntry->getValue());
+//                    }
+//
+//                    $dimensionName = $reportDimension->getMetric()->getName();
+//                    $dataDimensions[$dimensionName]['data'] = $serializer->serialize($dataEntry, 'json');
+//                    $dataDimensions[$dimensionName]['id'] = $reportDimension->getMetric()->getId();
+//
+//                    // Get value of earliest and latest entry to calculate percentage
+//                    $qb = $em->createQueryBuilder();
+//                    $qb->select('r.value')
+//                        ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
+//                        ->where('r.activity = :activityId')
+//                        ->andWhere('r.campaign = :campaignId')
+//                        ->andWhere('r.metric = :metricId')
+//                        ->orderBy('r.time', 'ASC')
+//                        ->setMaxResults(1)
+//                        ->setParameter('activityId', $reportActivity->getActivity()->getId())
+//                        ->setParameter('campaignId', $campaignId)
+//                        ->setParameter('metricId', $reportDimension->getMetric()->getId());
+//                    $query = $qb->getQuery();
+//                    $startValue = $query->getResult();
+//
+//                    $qb = $em->createQueryBuilder();
+//                    $qb->select('r.value')
+//                        ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
+//                        ->where('r.activity = :activityId')
+//                        ->andWhere('r.campaign = :campaignId')
+//                        ->andWhere('r.metric = :metricId')
+//                        ->orderBy('r.time', 'DESC')
+//                        ->setMaxResults(1)
+//                        ->setParameter('activityId', $reportActivity->getActivity()->getId())
+//                        ->setParameter('campaignId', $campaignId)
+//                        ->setParameter('metricId', $reportDimension->getMetric()->getId());
+//                    $query = $qb->getQuery();
+//                    $endValue = $query->getResult();
+//
+//                    // calculate percentage:
+//                    $startValue = $startValue[0]['value'];
+//                    $endValue = $endValue[0]['value'];
+//                    $percent = (($endValue - $startValue) / $startValue)*100;
+//
+//                    //$data_percent = number_format( $percent * 100, 2 ) . '%';
+//
+//                    $dataDimensions[$dimensionName]['percent'] = $percent;
+//                }
+//
+//                $dataReport[] = array(
+//                    'activity' => $reportActivity->getActivity(),
+//                    'dimensions' => $dataDimensions,
+//                );
+//            }
+//            $dataCampaign['startDate'] = $campaign->getStartDate()->format('F d, Y H:i:s');
+//            $dataCampaign['endDate'] = $campaign->getEndDate()->format('F d, Y H:i:s');
+//
+//            //print_r($dataReport);die();
+//
+//            $em = $this->getDoctrine()->getManager();
+//            $qb = $em->createQueryBuilder();
+//            $qb->select('m')
+//                ->from('CampaignChain\CoreBundle\Entity\Milestone', 'm')
+//                ->where('m.campaign = :campaignId')
+//                ->orderBy('m.due', 'ASC')
+//                ->setParameter('campaignId', $campaignId);
+//            $query = $qb->getQuery();
+//            $reportMilestones = $query->getResult();
+//
+//            foreach($reportMilestones as $reportMilestone){
+//                $dataMilestone .= '{';
+//                $dataMilestone .= '    x:'.$reportMilestone->getJavascriptTimestamp().',';
+//                $dataMilestone .= '    contents: "'.$reportMilestone->getName()/*.'<br/>'.$reportMilestone->getDue()->format('Y-m-d H:i')*/.'"';
+//                $dataMilestone .= '},';
+//
+//                $dataMarkings .= '{';
+//                $dataMarkings .= 'xaxis: { from: '.$reportMilestone->getJavascriptTimestamp().', to: '.$reportMilestone->getJavascriptTimestamp().' }, color: "#EBCCD1"';
+//                $dataMarkings .= '},';
+//            }
+        }
+
+        return $this->render(
+            'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:index.html.twig',
+            array(
+                'page_title' => 'Metrics Per Activity',
+                'form' => $form->createView(),
+//                'report_data' => $dataReport,
+//                'campaign_data' => $dataCampaign,
+//                'milestone_data' => $dataMilestone,
+//                'markings_data' => $dataMarkings,
+                'report_data' => $dataService->getCampaignSeries($campaign),
+                'campaign_data' => $dataService->getCampaignData($campaign),
+                'milestone_data' => $dataService->getMilestonesData($campaign),
+                'markings_data' => $dataService->getMilestonesMarkings($campaign),
+            ));
+    }
+}

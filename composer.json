@@ -1,0 +1,17 @@
+{
+    "name": "campaignchain/report-analytics-metrics-per-activity",
+    "description": "Show metrics per activity.",
+    "keywords": ["reporting","activity"],
+    "type": "campaignchain-report/analytics",
+    "homepage": "http://www.campaignchain.com",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Sandro Groganz",
+            "email": "sandro@campaignchain.com"
+        }
+    ],
+    "require": {
+        "campaignchain/core": "dev-master"
+    }
+}

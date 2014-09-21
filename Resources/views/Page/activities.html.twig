@@ -1,0 +1,131 @@
+{#
+This file is part of the CampaignChain package.
+
+(c) Sandro Groganz <sandro@campaignchain.com>
+
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+#}
+
+{% extends 'CampaignChainCoreBundle:Base:base.html.twig' %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {{ form_javascript(form) }}
+    {% javascripts '@flot_js' combine=true %}
+        <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    {% javascripts '@flot_comments_js' %}
+    <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    {% javascripts '@flot_tooltip_js' %}
+    <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ form_stylesheet(form) }}
+    {% stylesheets '@select2_css' combine=true %}
+    <link href="{{ asset_url }}" type="text/css" rel="stylesheet" />
+    {% endstylesheets %}
+    {% stylesheets '@campaignchain_flot_css' filter="cssrewrite" output="media/css/*.css"
+    'bundles/campaignchaincore/css/*'%}
+    <link href="{{ asset_url }}" type="text/css" rel="stylesheet" />
+    {% endstylesheets %}
+{% endblock %}
+
+{% block body %}
+    {% javascripts '@select2_js' %}
+    <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+
+    {{ form(form, { 'style': 'inline' }) }}
+
+    {% if report_data and report_data is iterable %}
+        {% for report in report_data %}
+            <h1>{{ report.activity.getName() }}</h1>
+            <p>{{ report.activity.getDue()|campaignchain_datetime() }}</p>
+            {% for dimension_name,dimension in report.dimensions %}
+                <h2>{{ dimension_name }}</h2>
+
+                <script type="text/javascript">
+
+                    $(document).ready(function() {
+
+                        var d_{{ report.activity.getId() }}_{{ dimension.id }} = {{ dimension.data|raw }};
+
+                        $.plot("#placeholder_{{ report.activity.getId() }}_{{ dimension.id }}", [d_{{ report.activity.getId() }}_{{ dimension.id }}], {
+                            grid: {
+                                show: true,
+                                markings: [
+                                    {{ markings_data|raw }}
+                                ],
+                                markingsLineWidth: 1
+                            },
+                            series: {
+                                lines: { show: true, colors: "#000", fill: true, fillColor: '#eee' },
+                                points: { show: true, colors: '#000' },
+                            },
+                            xaxis: {
+                                mode: "time",
+                                tickSize: [7, "day"],
+                                min: (new Date('{{ campaign_data.startDate }}')).getTime(),
+                                max: (new Date('{{ campaign_data.endDate }}')).getTime(),
+                            },
+                            yaxis: {
+                                autoscaleMargin: 0.4,
+                            },
+                            comment: {
+                                show: true,
+                                notch: {
+                                    size: "10px"
+                                },
+                                position: {
+                                    offsetX: -9,
+                                    x: function (x) {
+                                        return {
+                                            "left": x + parseFloat(this.offsetX || 0)
+                                        };
+                                    },
+                                }
+                            },
+                            comments: [
+                                {{ milestone_data|raw }}
+                            ],
+                            tooltip: {
+                                show: true
+                            },
+                            tooltipOpts: {
+                                xDateFormat:    '%a, %b %e, %Y',
+                                content:        "<label>%x</label><br/>{{ dimension_name }}: %y"
+                            },
+                            legend: {
+                                labelBoxBorderColor: "none",
+                                position: "right"
+                            },
+                            colors: ["#31708F"],
+                        });
+                    });
+
+                </script>
+
+                <div class="row-fluid">
+                    <div class="span12">
+                        <div id="placeholder_{{ report.activity.getId() }}_{{ dimension.id }}" style="width:100%;height:200px"></div>
+                    </div>
+                    <div class="span12">
+                        <div class="campaignchain-chart-dashboard">
+                            <div class="report">
+                                <div class="entity">Campaign</div>
+                                <div class="value"><label>Duration:</label> <span class="data">{{ campaign_data.duration }}</span> <span class="unit">days</span></div>
+                                <div class="percent{% if dimension.percent < 0 %}-negative{% else %}-positive{% endif %}">
+                                    <span class="fa fa-arrow-circle-{% if dimension.percent < 0 %}down{% else %}up{% endif %}"></span> {{ dimension.percent|number_format( 2 ) }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+{% endblock %}
