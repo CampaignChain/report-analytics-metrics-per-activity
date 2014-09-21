@@ -13,5 +13,8 @@
     ],
     "require": {
         "campaignchain/core": "dev-master"
+    },
+    "autoload": {
+        "psr-4": { "CampaignChain\\Report\\Analytics\\MetricsPerActivityBundle\\": "" }
     }
 }
