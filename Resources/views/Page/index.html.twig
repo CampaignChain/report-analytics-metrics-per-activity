@@ -40,7 +40,14 @@ file that was distributed with this source code.
     <script src="{{ asset_url }}"></script>
     {% endjavascripts %}
 
-    {{ form(form, { 'style': 'inline' }) }}
+    <form method="GET" class="form-inline" role="form" {{ form_enctype(form) }}>
+        <div id="form">
+            {{ bootstrap_set_style('inline') }}
+            {{ form_row(form.campaign) }}
+            <button class="btn btn-primary" type="submit"><i class="fa fa-area-chart"></i> Show</button>
+            {{ form_rest(form) }}
+        </div>
+    </form>
 
     {% if report_data is defined and report_data is iterable %}
         {# // The series point styles available with Flot. #}

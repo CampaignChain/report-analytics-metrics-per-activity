@@ -40,9 +40,6 @@ class PageController extends Controller
                 'empty_value' => 'Select a Campaign',
                 'empty_data' => null,
             ))
-            ->add('save', 'submit', array(
-                'label' => 'Show Report'
-            ))
             ->getForm();
 
         $form->handleRequest($request);
@@ -119,9 +116,6 @@ class PageController extends Controller
                 'empty_value' => 'Select a Campaign',
                 'empty_data' => null,
             ))
-            ->add('save', 'submit', array(
-                'label' => 'Show Report'
-            ))
             ->getForm();
 
         $form->handleRequest($request);
@@ -130,141 +124,6 @@ class PageController extends Controller
             $campaign = $form->getData()['campaign'];
 
             $dataService = $this->get('campaignchain.report.analytics.metrics_per_activity.data');
-
-
-//            $campaignId = $campaign->getId();
-//
-//            // Find all activities of this campaign that do have report data
-//            $em = $this->getDoctrine()->getManager();
-//            $qb = $em->createQueryBuilder();
-//            $qb->select('r')
-//                ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-//                ->from('CampaignChain\CoreBundle\Entity\Activity', 'a')
-//                ->where('r.campaign = :campaignId')
-//                ->groupBy('r.activity')
-//                ->orderBy('a.due', 'ASC')
-//                ->setParameter('campaignId', $campaignId);
-//            $query = $qb->getQuery();
-//            $reportActivities = $query->getResult();
-//
-//            // Get campaign duration in days
-//            $campaignStartDate = $reportActivities[0]->getCampaign()->getStartDate();
-//            $campaignEndDate = $reportActivities[0]->getCampaign()->getEndDate();
-//            $dataCampaign['duration'] = $campaignStartDate->diff($campaignEndDate)->format('%a');
-//
-//            // We'll need the serializer later
-//            $encoders = array(new JsonEncoder());
-//            $normalizers = array(new GetSetMethodNormalizer());
-//            $serializer = new Serializer($normalizers, $encoders);
-//
-//            // Get the report data per activity
-//            foreach($reportActivities as $reportActivity){
-//                $qb = $em->createQueryBuilder();
-//                $qb->select('r')
-//                    ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-//                    ->where('r.activity = :activityId')
-//                    ->andWhere('r.campaign = :campaignId')
-//                    ->groupBy('r.metric')
-//                    ->setParameter('activityId', $reportActivity->getActivity()->getId())
-//                    ->setParameter('campaignId', $campaignId);
-//                $query = $qb->getQuery();
-//                $reportDimensions = $query->getResult();
-//
-//                // Get the report data per dimension
-//                foreach($reportDimensions as $reportDimension){
-//                    $qb = $em->createQueryBuilder();
-//                    $qb->select('r')
-//                        ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-//                        ->where('r.activity = :activityId')
-//                        ->andWhere('r.campaign = :campaignId')
-//                        ->andWhere('r.metric = :metricId')
-//                        ->orderBy('r.time', 'ASC')
-//                        ->setParameter('activityId', $reportActivity->getActivity()->getId())
-//                        ->setParameter('campaignId', $campaignId)
-//                        ->setParameter('metricId', $reportDimension->getMetric()->getId());
-//                    $query = $qb->getQuery();
-//                    $reportEntries = $query->getResult();
-//
-//                    $dataEntry = array();
-//
-//                    foreach($reportEntries as $reportEntry){
-//                        // Collecting the data series
-//                        $dataEntry[] = array($reportEntry->getJavascriptTimestamp(), $reportEntry->getValue());
-//                    }
-//
-//                    $dimensionName = $reportDimension->getMetric()->getName();
-//                    $dataDimensions[$dimensionName]['data'] = $serializer->serialize($dataEntry, 'json');
-//                    $dataDimensions[$dimensionName]['id'] = $reportDimension->getMetric()->getId();
-//
-//                    // Get value of earliest and latest entry to calculate percentage
-//                    $qb = $em->createQueryBuilder();
-//                    $qb->select('r.value')
-//                        ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-//                        ->where('r.activity = :activityId')
-//                        ->andWhere('r.campaign = :campaignId')
-//                        ->andWhere('r.metric = :metricId')
-//                        ->orderBy('r.time', 'ASC')
-//                        ->setMaxResults(1)
-//                        ->setParameter('activityId', $reportActivity->getActivity()->getId())
-//                        ->setParameter('campaignId', $campaignId)
-//                        ->setParameter('metricId', $reportDimension->getMetric()->getId());
-//                    $query = $qb->getQuery();
-//                    $startValue = $query->getResult();
-//
-//                    $qb = $em->createQueryBuilder();
-//                    $qb->select('r.value')
-//                        ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-//                        ->where('r.activity = :activityId')
-//                        ->andWhere('r.campaign = :campaignId')
-//                        ->andWhere('r.metric = :metricId')
-//                        ->orderBy('r.time', 'DESC')
-//                        ->setMaxResults(1)
-//                        ->setParameter('activityId', $reportActivity->getActivity()->getId())
-//                        ->setParameter('campaignId', $campaignId)
-//                        ->setParameter('metricId', $reportDimension->getMetric()->getId());
-//                    $query = $qb->getQuery();
-//                    $endValue = $query->getResult();
-//
-//                    // calculate percentage:
-//                    $startValue = $startValue[0]['value'];
-//                    $endValue = $endValue[0]['value'];
-//                    $percent = (($endValue - $startValue) / $startValue)*100;
-//
-//                    //$data_percent = number_format( $percent * 100, 2 ) . '%';
-//
-//                    $dataDimensions[$dimensionName]['percent'] = $percent;
-//                }
-//
-//                $dataReport[] = array(
-//                    'activity' => $reportActivity->getActivity(),
-//                    'dimensions' => $dataDimensions,
-//                );
-//            }
-//            $dataCampaign['startDate'] = $campaign->getStartDate()->format('F d, Y H:i:s');
-//            $dataCampaign['endDate'] = $campaign->getEndDate()->format('F d, Y H:i:s');
-//
-//            //print_r($dataReport);die();
-//
-//            $em = $this->getDoctrine()->getManager();
-//            $qb = $em->createQueryBuilder();
-//            $qb->select('m')
-//                ->from('CampaignChain\CoreBundle\Entity\Milestone', 'm')
-//                ->where('m.campaign = :campaignId')
-//                ->orderBy('m.due', 'ASC')
-//                ->setParameter('campaignId', $campaignId);
-//            $query = $qb->getQuery();
-//            $reportMilestones = $query->getResult();
-//
-//            foreach($reportMilestones as $reportMilestone){
-//                $dataMilestone .= '{';
-//                $dataMilestone .= '    x:'.$reportMilestone->getJavascriptTimestamp().',';
-//                $dataMilestone .= '    contents: "'.$reportMilestone->getName()/*.'<br/>'.$reportMilestone->getDue()->format('Y-m-d H:i')*/.'"';
-//                $dataMilestone .= '},';
-//
-//                $dataMarkings .= '{';
-//                $dataMarkings .= 'xaxis: { from: '.$reportMilestone->getJavascriptTimestamp().', to: '.$reportMilestone->getJavascriptTimestamp().' }, color: "#EBCCD1"';
-//                $dataMarkings .= '},';
-//            }
         }
 
         return $this->render(
@@ -272,10 +131,6 @@ class PageController extends Controller
             array(
                 'page_title' => 'Metrics Per Activity',
                 'form' => $form->createView(),
-//                'report_data' => $dataReport,
-//                'campaign_data' => $dataCampaign,
-//                'milestone_data' => $dataMilestone,
-//                'markings_data' => $dataMarkings,
                 'report_data' => $dataService->getCampaignSeries($campaign),
                 'campaign_data' => $dataService->getCampaignData($campaign),
                 'milestone_data' => $dataService->getMilestonesData($campaign),
