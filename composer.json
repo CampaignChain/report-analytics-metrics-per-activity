@@ -16,5 +16,20 @@
     },
     "autoload": {
         "psr-4": { "CampaignChain\\Report\\Analytics\\MetricsPerActivityBundle\\": "" }
+    },
+    "extra": {
+        "campaignchain": {
+            "kernel": {
+                "classes": [
+                    "CampaignChain\\Report\\Analytics\\MetricsPerActivityBundle\\CampaignChainReportAnalyticsMetricsPerActivityBundle"
+                ],
+                "routing":
+                {
+                    "name": "campaignchain_report_analytics_metrics_per_activity",
+                    "resource": "@CampaignChainReportAnalyticsMetricsPerActivityBundle/Resources/config/routing.yml",
+                    "prefix": "/"
+                }
+            }
+        }
     }
 }

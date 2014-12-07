@@ -40,7 +40,7 @@ file that was distributed with this source code.
     <script src="{{ asset_url }}"></script>
     {% endjavascripts %}
 
-    <form method="GET" class="form-inline" role="form" {{ form_enctype(form) }}>
+    <form method="GET" class="form-inline" role="form">
         <div id="form">
             {{ bootstrap_set_style('inline') }}
             {{ form_row(form.campaign) }}
