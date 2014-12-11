@@ -104,11 +104,12 @@ class Data
         foreach($milestones as $milestone){
             $this->milestonesData .= '{';
             $this->milestonesData .= '    x:'.$milestone->getJavascriptTimestamp().',';
+            $this->milestonesData .= '    y: 0,';
             $this->milestonesData .= '    contents: "'.$milestone->getName()/*.'<br/>'.$milestone->getDue()->format('Y-m-d H:i')*/.'"';
             $this->milestonesData .= '},';
         }
 
-        return $this->milestonesData;
+        return rtrim($this->milestonesData, ',');
     }
 
     public function getMilestonesMarkings($campaign){

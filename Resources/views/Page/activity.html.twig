@@ -49,6 +49,10 @@ file that was distributed with this source code.
 
                     $(document).ready(function() {
 
+                        // Put milestones on top of chart
+                        var pos = $('.campaignchain-flot').position();
+                        $('.jquery-flot-comment').css({'top': 0});
+
                         var d_{{ report.activity.getId() }}_{{ dimension.id }} = {{ dimension.data|raw }};
 
                         $.plot("#placeholder_{{ report.activity.getId() }}_{{ dimension.id }}", [d_{{ report.activity.getId() }}_{{ dimension.id }}], {
@@ -78,7 +82,7 @@ file that was distributed with this source code.
                                     size: "10px"
                                 },
                                 position: {
-                                    offsetX: -9,
+                                    offsetX: -21,
                                     x: function (x) {
                                         return {
                                             "left": x + parseFloat(this.offsetX || 0)
