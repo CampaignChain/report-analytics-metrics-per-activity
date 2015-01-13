@@ -234,9 +234,13 @@ class Data
         $endValue = $query->getResult();
 
         // calculate percentage:
-        $startValue = $startValue[0]['value'];
-        $endValue = $endValue[0]['value'];
-        $percent = (($endValue - $startValue) / $startValue)*100;
+        if($startValue[0]['value'] != 0){
+            $startValue = $startValue[0]['value'];
+            $endValue = $endValue[0]['value'];
+            $percent = (($endValue - $startValue) / $startValue)*100;
+        } else {
+            $percent = 0;
+        }
 
         //$data_percent = number_format( $percent * 100, 2 ) . '%';
 
