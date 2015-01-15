@@ -1,0 +1,21 @@
+{#
+This file is part of the CampaignChain package.
+
+(c) Sandro Groganz <sandro@campaignchain.com>
+
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+#}
+
+<div id="campaignchain-chart-header">
+    <div class="campaignchain-sticky-heading">
+        <h1>{{ report.activity.getName() }}</h1>
+        {% set location = report.activity.getLocation() %}
+        <div class='campaignchain-medium-icon'>
+            <img class='icon' src='{{ asset( location|campaignchain_medium_icon ) }}'/>
+            <img class='context-icon' src='{{ asset( location|campaignchain_medium_context ) }}' style='background-image: url("{{ asset( location|campaignchain_medium_context ) }}");'/>
+            <span class="text"><a href="{{ location.getUrl() }}" target="_blank">{{ location.getName() }}</a></span>
+        </div>
+        <div class="datetime"><span class="fa fa-clock-o"></span> {{ report.activity.getStartDate()|campaignchain_datetime() }}</div>
+    </div>
+</div>

@@ -40,8 +40,7 @@ file that was distributed with this source code.
 {% block body %}
     {% if report_data and report_data is iterable %}
         {% for report in report_data %}
-            <h1>{{ report.activity.getName() }}</h1>
-            <p><span class="fa fa-clock-o"></span> {{ report.activity.getStartDate()|campaignchain_datetime() }}</p>
+            {% include 'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:chart_header.html.twig' %}
             {% for dimension_name,dimension in report.dimensions %}
                 <h2 class="campaignchain-sticky-heading">{{ dimension_name }}</h2>
 

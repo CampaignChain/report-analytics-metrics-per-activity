@@ -53,10 +53,7 @@ file that was distributed with this source code.
         {# // The series point styles available with Flot. #}
         {% set flot_styles = { 0: 'circle', 1: 'square', 2: 'diamond', 3: 'triangle', 4:'cross' } %}
         {% for report in report_data %}
-            <div class="campaignchain-sticky-heading">
-                <h1>{{ report.activity.getName() }}</h1>
-                <p><span class="fa fa-clock-o"></span> {{ report.activity.getStartDate()|campaignchain_datetime() }}</p>
-            </div>
+            {% include 'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:chart_header.html.twig' %}
             <script type="text/javascript">
                 $(document).ready(function() {
 
