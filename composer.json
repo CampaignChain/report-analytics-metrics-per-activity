@@ -13,7 +13,7 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "campaignchain/core": ">=1.0.0-alpha.4"
+        "campaignchain/core": "1.0.0-alpha.4 - 1.0.0"
     },
     "autoload": {
         "psr-4": { "CampaignChain\\Report\\Analytics\\MetricsPerActivityBundle\\": "" }
