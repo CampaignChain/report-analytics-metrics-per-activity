@@ -11,14 +11,16 @@
             "email": "sandro@campaignchain.com"
         }
     ],
-    "minimum-stability": "dev",
     "require": {
-        "campaignchain/core": "1.0.0-alpha.4 - 1.0.0"
+        "campaignchain/core": "1.0.0@beta - 1.0.0@rc"
     },
     "autoload": {
         "psr-4": { "CampaignChain\\Report\\Analytics\\MetricsPerActivityBundle\\": "" }
     },
     "extra": {
+        "branch-alias": {
+            "dev-1.0.0-beta.1": "1.0.0-dev"
+        },
         "campaignchain": {
             "kernel": {
                 "classes": [
