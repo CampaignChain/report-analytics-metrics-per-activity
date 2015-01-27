@@ -11,11 +11,7 @@ file that was distributed with this source code.
     <div class="campaignchain-sticky-heading">
         <h1>{{ report.activity.getName() }}</h1>
         {% set location = report.activity.getLocation() %}
-        <div class='campaignchain-medium-icon'>
-            <img class='icon' src='{{ asset( location|campaignchain_medium_icon ) }}'/>
-            <img class='context-icon' src='{{ asset( location|campaignchain_medium_context ) }}' style='background-image: url("{{ asset( location|campaignchain_medium_context ) }}");'/>
-            <span class="text"><a href="{{ location.getUrl() }}" target="_blank">{{ location.getName() }}</a></span>
-        </div>
+        {{ location|campaignchain_tpl_medium }}
         <div class="datetime"><span class="fa fa-clock-o"></span> {{ report.activity.getStartDate()|campaignchain_datetime() }}</div>
     </div>
 </div>
