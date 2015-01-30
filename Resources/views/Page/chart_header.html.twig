@@ -12,6 +12,6 @@ file that was distributed with this source code.
         <h1>{{ report.activity.getName() }}</h1>
         {% set location = report.activity.getLocation() %}
         {{ location|campaignchain_tpl_medium }}
-        <div class="datetime"><span class="fa fa-clock-o"></span> {{ report.activity.getStartDate()|campaignchain_datetime() }}</div>
+        <div class="datetime"><span class="fa fa-clock-o"></span> {{ report.activity|campaignchain_tpl_trigger_hook_inline }}</div>
     </div>
 </div>
