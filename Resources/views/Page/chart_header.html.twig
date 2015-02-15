@@ -11,7 +11,7 @@ file that was distributed with this source code.
     <div class="campaignchain-sticky-heading">
         <h1>{{ report.activity.getName() }}</h1>
         {% set location = report.activity.getLocation() %}
-        {{ location|campaignchain_tpl_medium }}
+        {{ location|campaignchain_tpl_teaser }}
         <div class="datetime"><span class="fa fa-clock-o"></span> {{ report.activity|campaignchain_tpl_trigger_hook_inline }}</div>
     </div>
 </div>
