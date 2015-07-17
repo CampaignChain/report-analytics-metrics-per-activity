@@ -1,7 +1,7 @@
 {
     "name": "campaignchain/report-analytics-metrics-per-activity",
     "description": "Show metrics per activity.",
-    "keywords": ["reporting","activity"],
+    "keywords": ["report","activity","campaignchain"],
     "type": "campaignchain-report-analytics",
     "homepage": "http://www.campaignchain.com",
     "license": "Apache-2.0",
