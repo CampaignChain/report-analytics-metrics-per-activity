@@ -1,6 +1,6 @@
 {
     "name": "campaignchain/report-analytics-metrics-per-activity",
-    "description": "Show metrics per activity.",
+    "description": "Graphs that display the metrics per marketing activity of a specific campaign.",
     "keywords": ["report","campaignchain"],
     "type": "campaignchain-report-analytics",
     "homepage": "http://www.campaignchain.com",
