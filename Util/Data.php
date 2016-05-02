@@ -125,7 +125,7 @@ class Data
             $this->milestonesData .= '},';
         }
 
-        return null;
+        return rtrim($this->milestonesData, ',');
     }
 
     public function getMilestonesMarkings($campaign){
