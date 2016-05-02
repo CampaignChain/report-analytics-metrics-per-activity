@@ -49,10 +49,10 @@ file that was distributed with this source code.
         </div>
     </form>
 
-    {% if report_data is defined and report_data is iterable %}
+    {% if report_data is defined and report_data.data is iterable %}
         {# // The series point styles available with Flot. #}
         {% set flot_styles = { 0: 'circle', 1: 'square', 2: 'diamond', 3: 'triangle', 4:'cross' } %}
-        {% for report in report_data %}
+        {% for report in report_data.data %}
             {% include 'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:chart_header.html.twig' %}
             <script type="text/javascript">
                 $(document).ready(function() {
@@ -65,9 +65,9 @@ file that was distributed with this source code.
                     var d_{{ report.activity.getId() }}_{{ dimension.id }} = {{ dimension.data|raw }};
                 {% endfor %}
                     $.plot("#placeholder_{{ report.activity.getId() }}", [
-                        {% for dimension_name,dimension in report.dimensions %}
+                        {% for dimension_id,dimension in report.dimensions %}
                         {
-                            label: "{{ dimension_name }}",
+                            label: "{{ report_data.metricNames[dimension_id]|default(dimension_id) }}",
                             data: d_{{ report.activity.getId() }}_{{ dimension.id }},
                             lines: { colors: "#222222", fill: false },
                             points: { colors: '#222222' },

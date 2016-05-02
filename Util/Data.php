@@ -10,8 +10,11 @@
 
 namespace CampaignChain\Report\Analytics\MetricsPerActivityBundle\Util;
 
+use CampaignChain\CoreBundle\Entity\Activity;
+use CampaignChain\CoreBundle\Entity\Campaign;
+use CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact;
+use CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityMetric;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
@@ -28,8 +31,6 @@ class Data
 
     public $campaign;
 
-    public $activities;
-
     public $milestones;
 
     public $dimensions;
@@ -37,8 +38,6 @@ class Data
     public $campaignDuration;
 
     public $campaignData;
-
-    public $dimensionsData;
 
     public $milestonesMarkings = null;
 
@@ -67,32 +66,49 @@ class Data
         return $this->campaignData;
     }
 
-    public function getCampaignSeries($campaign, $structure = self::ONE_SERIES_PER_DIMENSION){
+    /**
+     * @param $campaign
+     * @return array
+     */
+    public function getCampaignSeries($campaign){
         $activities = $this->getActivities($campaign);
-        foreach($activities as $activity){
-            $dimensions = $this->getMetrics($campaign, $activity->getActivity());
-            foreach($dimensions as $dimension){
-                $this->getFacts($campaign, $activity->getActivity(), $dimension->getMetric());
-            }
+        $seriesData = [];
+        $metricIds = [];
 
-            $seriesData[] = array(
+        foreach($activities as $activity){
+            $factsData = $this->getFacts($campaign, $activity->getActivity());
+            $seriesData[] = [
                 'activity' => $activity->getActivity(),
-                'dimensions' => $this->dimensionsData,
-            );
+                'dimensions' => $factsData,
+            ];
+
+            $usedMetricIds = array_keys($factsData);
+            foreach ($usedMetricIds as $metricId) {
+                if (in_array($metricId, $metricIds)) {
+                    continue;
+                }
+                $metricIds[] = $metricId;
+            }
         }
 
-        return $seriesData;
+        return [
+            'data' => $seriesData,
+            'metricNames' => $this->getMetricNamesById($metricIds),
+        ];
     }
 
     public function getActivitySeries($activity, $structure = self::ONE_SERIES_PER_DIMENSION){
-        $dimensions = $this->getMetrics($activity->getCampaign(), $activity);
-        foreach($dimensions as $dimension){
-            $this->getFacts($activity->getCampaign(), $activity, $dimension->getMetric());
+        $factsData = $this->getFacts($activity->getCampaign(), $activity, true);
+        $metricNames = $this->getMetricNamesById(array_keys($factsData));
+
+        $finalFactsdata = [];
+        foreach ($factsData as $k => $d) {
+            $finalFactsdata[$metricNames[$k]] = $d;
         }
 
         $seriesData[] = array(
             'activity' => $activity,
-            'dimensions' => $this->dimensionsData,
+            'dimensions' => $finalFactsdata,
         );
 
         return $seriesData;
@@ -124,18 +140,23 @@ class Data
         return $this->milestonesMarkings;
     }
 
-    public function getActivities($campaign){
+    /**
+     * @param Campaign $campaign
+     * @return ReportAnalyticsActivityFact[]
+     */
+    public function getActivities(Campaign $campaign){
         // Find all activities of this campaign that do have report data
-        $qb = $this->em->createQueryBuilder();
-        $qb->select('r')
-            ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-            ->from('CampaignChain\CoreBundle\Entity\Activity', 'a')
-            ->where('r.campaign = :campaignId')
-            ->groupBy('r.activity')
-            ->orderBy('a.startDate', 'ASC')
-            ->setParameter('campaignId', $campaign->getId());
-        $query = $qb->getQuery();
-        return $this->activities = $query->getResult();
+        $qb = $this->em->getRepository('CampaignChainCoreBundle:ReportAnalyticsActivityFact')
+            ->createQueryBuilder('fact')
+            ->select('fact, activity')
+            ->join('fact.activity', 'activity')
+            ->where('fact.campaign = :campaignId')
+            ->orderBy('activity.startDate', 'ASC')
+            ->groupBy('fact.activity')
+            ->setParameter('campaignId', $campaign->getId())
+            ->getQuery();
+
+        return $qb->getResult();
     }
 
     public function getCampaignDuration($campaign){
@@ -156,10 +177,32 @@ class Data
         return $this->milestones = $query->getResult();
     }
 
-    /*
+    public function getMetricNamesById(array $ids)
+    {
+        $qb = $this->em->getRepository('CampaignChainCoreBundle:ReportAnalyticsActivityMetric')
+            ->createQueryBuilder('m');
+
+        $results = $qb->select('m.id, m.name')
+            ->where($qb->expr()->in('m.id', $ids))
+            ->getQuery()
+            ->getArrayResult();
+
+        $tmp = [];
+        foreach ($results as $result) {
+            $tmp[$result['id']] = $result['name'];
+        }
+
+        return $tmp;
+    }
+
+    /**
      * Get the report data per activity.
+     * @param Campaign $campaign
+     * @param Activity $activity
+     *
+     * @return ReportAnalyticsActivityFact[]
      */
-    public function getMetrics($campaign, $activity){
+    public function getMetrics(Campaign $campaign, Activity $activity){
         $qb = $this->em->createQueryBuilder();
         $qb->select('r')
             ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
@@ -173,34 +216,46 @@ class Data
         return $this->dimensions;
     }
 
-    /*
+    /**
      * Get facts data per dimension.
+     *
+     * @param Campaign $campaign
+     * @param Activity $activity
+     * @param boolean  $percent
+     *
+     * @return array
      */
-    public function getFacts($campaign, $activity, $metric){
+    public function getFacts(Campaign $campaign, Activity $activity, $percent = false){
         $qb = $this->em->createQueryBuilder();
-        $qb->select('r')
+        $qb->select('r.time, r.value, IDENTITY(r.metric) as metric')
             ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
             ->where('r.activity = :activityId')
             ->andWhere('r.campaign = :campaignId')
-            ->andWhere('r.metric = :metricId')
             ->orderBy('r.time', 'ASC')
             ->setParameter('activityId', $activity->getId())
-            ->setParameter('campaignId', $campaign->getId())
-            ->setParameter('metricId', $metric->getId());
+            ->setParameter('campaignId', $campaign->getId());
+
         $query = $qb->getQuery();
-        $facts = $query->getResult();
+        $facts = $query->getArrayResult();
 
-        $factsData = array();
-
-        foreach($facts as $fact){
-            // Collecting the data series
-            $factsData[] = array($fact->getJavascriptTimestamp(), $fact->getValue());
+        $factsData = [];
+        $tmp = [];
+        foreach ($facts as $fact) {
+            $tmp[$fact['metric']][] = [
+                $fact['time']->getTimestamp() * 1000,
+                $fact['value'],
+            ];
         }
 
-        $dimensionName = $metric->getName();
-        $this->dimensionsData[$dimensionName]['data'] = $this->serializer->serialize($factsData, 'json');
-        $this->dimensionsData[$dimensionName]['id'] = $metric->getId();
-        $this->dimensionsData[$dimensionName]['percent'] = $this->getDimensionPercent($campaign, $activity, $metric);
+        foreach (array_keys($tmp) as $k) {
+            $factsData[$k]['data'] = $this->serializer->serialize($tmp[$k], 'json');
+            $factsData[$k]['id'] = $k;
+            if ($percent) {
+                $factsData[$k]['percent'] = $this->getDimensionPercent($campaign, $activity, $k);
+            }
+        }
+
+        return $factsData;
     }
 
     public function getDimensionPercent($campaign, $activity, $metric){
@@ -215,9 +270,9 @@ class Data
             ->setMaxResults(1)
             ->setParameter('activityId', $activity->getId())
             ->setParameter('campaignId', $campaign->getId())
-            ->setParameter('metricId', $metric->getId());
+            ->setParameter('metricId', $metric);
         $query = $qb->getQuery();
-        $startValue = $query->getResult();
+        $startValue = $query->getSingleScalarResult();
 
         $qb = $this->em->createQueryBuilder();
         $qb->select('r.value')
@@ -229,14 +284,12 @@ class Data
             ->setMaxResults(1)
             ->setParameter('activityId', $activity->getId())
             ->setParameter('campaignId', $campaign->getId())
-            ->setParameter('metricId', $metric->getId());
+            ->setParameter('metricId', $metric);
         $query = $qb->getQuery();
-        $endValue = $query->getResult();
+        $endValue = $query->getSingleScalarResult();
 
         // calculate percentage:
-        if($startValue[0]['value'] != 0){
-            $startValue = $startValue[0]['value'];
-            $endValue = $endValue[0]['value'];
+        if($startValue != 0){
             $percent = (($endValue - $startValue) / $startValue)*100;
         } else {
             $percent = 0;
