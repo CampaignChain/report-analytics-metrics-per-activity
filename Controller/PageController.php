@@ -27,10 +27,8 @@ class PageController extends Controller
                 // Only display campaigns for selection that actually have report data
                 'query_builder' => function(EntityRepository $er) {
                         return $er->createQueryBuilder('campaign')
-                            ->select('c')
-                            ->from('CampaignChain\CoreBundle\Entity\Campaign', 'c')
-                            ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-                            ->where('r.campaign = c.id')
+                            ->join('campaign.activityFacts', 'r')
+                            ->groupBy('campaign.id')
                             ->orderBy('campaign.startDate', 'ASC');
                     },
                 'property' => 'name',
@@ -81,54 +79,6 @@ class PageController extends Controller
             array(
                 'page_title' => 'Metrics Per Activity',
                 'report_data' => $dataService->getActivitySeries($activity),
-                'campaign_data' => $dataService->getCampaignData($campaign),
-                'milestone_data' => $dataService->getMilestonesData($campaign),
-                'markings_data' => $dataService->getMilestonesMarkings($campaign),
-            ));
-    }
-
-    public function activitiesAction(Request $request){
-
-        $dataReport = null;
-        $dataCampaign = null;
-        $dataMilestone = '';
-        $dataMarkings = '';
-
-        $campaign = array();
-        $form = $this->createFormBuilder($campaign)
-            ->setMethod('GET')
-            ->add('campaign', 'entity', array(
-                'label' => 'Campaign',
-                'class' => 'CampaignChainCoreBundle:Campaign',
-                // Only display campaigns for selection that actually have report data
-                'query_builder' => function(EntityRepository $er) {
-                        return $er->createQueryBuilder('campaign')
-                            ->select('c')
-                            ->from('CampaignChain\CoreBundle\Entity\Campaign', 'c')
-                            ->from('CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact', 'r')
-                            ->where('r.campaign = c.id')
-                            ->orderBy('campaign.startDate', 'ASC');
-                    },
-                'property' => 'name',
-                'empty_value' => 'Select a Campaign',
-                'empty_data' => null,
-            ))
-            ->getForm();
-
-        $form->handleRequest($request);
-
-        if ($form->isValid()) {
-            $campaign = $form->getData()['campaign'];
-
-            $dataService = $this->get('campaignchain.report.analytics.metrics_per_activity.data');
-        }
-
-        return $this->render(
-            'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:index.html.twig',
-            array(
-                'page_title' => 'Metrics Per Activity',
-                'form' => $form->createView(),
-                'report_data' => $dataService->getCampaignSeries($campaign),
                 'campaign_data' => $dataService->getCampaignData($campaign),
                 'milestone_data' => $dataService->getMilestonesData($campaign),
                 'markings_data' => $dataService->getMilestonesMarkings($campaign),
