@@ -15,9 +15,7 @@ use CampaignChain\CoreBundle\Entity\Campaign;
 use CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact;
 use CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityMetric;
 use Doctrine\ORM\EntityManager;
-use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class Data
 {
@@ -43,14 +41,12 @@ class Data
 
     public $milestonesData = null;
 
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em, SerializerInterface $serializer)
     {
         $this->em = $em;
 
         // We'll need the serializer later
-        $encoders = array(new JsonEncoder());
-        $normalizers = array(new GetSetMethodNormalizer());
-        $this->serializer = new Serializer($normalizers, $encoders);
+        $this->serializer = $serializer;
     }
 
     public function setCampaign($campaign){

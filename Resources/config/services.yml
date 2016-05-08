@@ -10,4 +10,6 @@ parameters:
 services:
     campaignchain.report.analytics.metrics_per_activity.data:
         class: CampaignChain\Report\Analytics\MetricsPerActivityBundle\Util\Data
-        arguments: ["@doctrine.orm.entity_manager"]
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@campaignchain.core.serializer.default'
