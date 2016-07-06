@@ -10,39 +10,45 @@
 
 namespace CampaignChain\Report\Analytics\MetricsPerActivityBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use CampaignChain\CoreBundle\Entity\Campaign;
-use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityRepository;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 
 class PageController extends Controller
 {
-    public function indexAction(Request $request){
-        $campaign = array();
+    public function indexAction(Request $request)
+    {
+        $campaign = [];
         $form = $this->createFormBuilder($campaign)
             ->setMethod('GET')
-            ->add('campaign', 'entity', array(
-                'label' => 'Campaign',
-                'class' => 'CampaignChainCoreBundle:Campaign',
-                // Only display campaigns for selection that actually have report data
-                'query_builder' => function(EntityRepository $er) {
+            ->add(
+                'campaign',
+                EntityType::class,
+                [
+                    'label' => 'Campaign',
+                    'class' => 'CampaignChainCoreBundle:Campaign',
+                    // Only display campaigns for selection that actually have report data
+                    'query_builder' => function (EntityRepository $er) {
                         return $er->createQueryBuilder('campaign')
                             ->join('campaign.activityFacts', 'r')
                             ->groupBy('campaign.id')
                             ->orderBy('campaign.startDate', 'ASC');
                     },
-                'property' => 'name',
-                'empty_value' => 'Select a Campaign',
-                'empty_data' => null,
-            ))
+                    'property' => 'name',
+                    'empty_value' => 'Select a Campaign',
+                    'empty_data' => null,
+                ]
+            )
             ->getForm();
 
         $form->handleRequest($request);
 
-        $tplVars = array(
+        $tplVars = [
             'page_title' => 'Metrics Per Activity',
             'form' => $form->createView(),
-        );
+        ];
 
         if ($form->isValid()) {
             $campaign = $form->getData()['campaign'];
@@ -55,10 +61,12 @@ class PageController extends Controller
 
         return $this->render(
             'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:index.html.twig',
-            $tplVars);
+            $tplVars
+        );
     }
 
-    public function activityAction(Request $request, $id){
+    public function activityAction($id)
+    {
         // TODO: If an activity is done, it cannot be edited.
         $activity = $this->getDoctrine()
             ->getRepository('CampaignChainCoreBundle:Activity')
@@ -76,12 +84,13 @@ class PageController extends Controller
 
         return $this->render(
             'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:activity.html.twig',
-            array(
+            [
                 'page_title' => 'Metrics Per Activity',
                 'report_data' => $dataService->getActivitySeries($activity),
                 'campaign_data' => $dataService->getCampaignData($campaign),
                 'milestone_data' => $dataService->getMilestonesData($campaign),
                 'markings_data' => $dataService->getMilestonesMarkings($campaign),
-            ));
+            ]
+        );
     }
 }
