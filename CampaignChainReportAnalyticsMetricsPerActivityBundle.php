@@ -17,8 +17,13 @@
 
 namespace CampaignChain\Report\Analytics\MetricsPerActivityBundle;
 
+use CampaignChain\Report\Analytics\MetricsPerActivityBundle\DependencyInjection\CampaignChainReportAnalyticsMetricsPerActivityExtension;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class CampaignChainReportAnalyticsMetricsPerActivityBundle extends Bundle
 {
+    public function getContainerExtension()
+    {
+        return new CampaignChainReportAnalyticsMetricsPerActivityExtension();
+    }
 }
