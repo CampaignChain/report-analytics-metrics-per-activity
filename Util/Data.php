@@ -21,7 +21,7 @@ use CampaignChain\CoreBundle\Entity\Activity;
 use CampaignChain\CoreBundle\Entity\Campaign;
 use CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityFact;
 use CampaignChain\CoreBundle\Entity\ReportAnalyticsActivityMetric;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ManagerRegistry;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class Data
@@ -48,9 +48,9 @@ class Data
 
     public $milestonesData = null;
 
-    public function __construct(EntityManager $em, SerializerInterface $serializer)
+    public function __construct(ManagerRegistry $managerRegistry, SerializerInterface $serializer)
     {
-        $this->em = $em;
+        $this->em = $managerRegistry->getManager();
 
         // We'll need the serializer later
         $this->serializer = $serializer;
