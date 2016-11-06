@@ -47,7 +47,6 @@ limitations under the License.
 {% block body %}
     {% if report_data and report_data is iterable %}
         {% for report in report_data %}
-            {% include 'CampaignChainReportAnalyticsMetricsPerActivityBundle:Page:chart_header.html.twig' %}
             {% for dimension_name,dimension in report.dimensions %}
                 <h2 class="campaignchain-sticky-heading">{{ dimension_name }}</h2>
 

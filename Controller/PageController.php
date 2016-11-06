@@ -58,7 +58,7 @@ class PageController extends Controller
         ];
 
         if ($form->isValid()) {
-            $campaign = $form->getData()['campaign'];
+            $tplVars['campaign'] = $campaign = $form->getData()['campaign'];
             $dataService = $this->get('campaignchain.report.analytics.metrics_per_activity.data');
             $tplVars['report_data'] = $dataService->getCampaignSeries($campaign);
             $tplVars['campaign_data'] = $dataService->getCampaignData($campaign);
